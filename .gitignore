@@ -102,5 +102,5 @@ ENV/
 .mypy_cache/
 
 # irrelevant tests
-.testjs.py
-.tests.py
+testjs.py
+tests.py
