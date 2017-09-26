@@ -162,6 +162,7 @@ class _BPlusLeaf(_BNode):
     __slots__ = ["tree", "contents", "data", "next"]
 
     def __init__(self, tree, contents=None, data=None, next=None):
+        super(_BPlusLeaf, self).__init__()
         self.tree = tree
         self.contents = contents or []
         self.data = data or []
@@ -362,7 +363,7 @@ class BTree(object):
 
         return [self.LEAF(self, contents=node) for node in leaves], seps
 
-    def _build_bulkloaded_branches(self, (leaves, seps)):
+    def _build_bulkloaded_branches(self, leaves, seps):
         minimum = self.order // 2
         levels = [leaves]
 
@@ -425,7 +426,7 @@ class BPlusTree(BTree):
 
     def get(self, key, default=None):
         try:
-            return self._get(key).next()
+            return next(self._get(key))
         except StopIteration:
             return default
 
@@ -457,15 +458,15 @@ class BPlusTree(BTree):
             node = node.children[0]
 
         while node:
-            for pair in itertools.izip(node.contents, node.data):
+            for pair in zip(node.contents, node.data):
                 yield pair
             node = node.next
 
     def iterkeys(self):
-        return itertools.imap(operator.itemgetter(0), self.iteritems())
+        return map(operator.itemgetter(0), self.iteritems())
 
     def itervalues(self):
-        return itertools.imap(operator.itemgetter(1), self.iteritems())
+        return map(operator.itemgetter(1), self.iteritems())
 
     __iter__ = iterkeys
 
@@ -500,14 +501,14 @@ class BPlusTree(BTree):
                 data=[p[1] for p in pairs])
             for pairs in leaves]
 
-        for i in xrange(len(leaves) - 1):
+        for i in range(len(leaves) - 1):
             leaves[i].next = leaves[i + 1]
 
         return leaves, [s[0] for s in seps]
 
 
 import random
-import unittest
+# import unittest
 
 
 class BTreeTests(object):
@@ -551,9 +552,9 @@ class BPlusTreeTests(object):
             bt.insert(item, str(item))
 
         for item in l:
-            self.assertEqual(str(item), bt[item])
+            assert (str(item) == bt[item]),''
 
-        self.assertEqual(l, list(bt))
+        assert (l == list(bt))
 
     def test_additions_random(self):
         bt = BPlusTree(20)
@@ -571,13 +572,13 @@ class BPlusTreeTests(object):
     def test_bulkload(self):
         bt = BPlusTree.bulkload(zip(range(2000), map(str, range(2000))), 20)
 
-        self.assertEqual(list(bt), range(2000))
+        assert (list(bt) ==range(2000))
 
-        self.assertEqual(
-                list(bt.iteritems()),
+        assert(
+                list(bt.iteritems()) ==
                 zip(range(2000), map(str, range(2000))))
 
 
 if __name__ == '__main__':
-    t = BPlusTreeTests
+    t = BPlusTreeTests()
     t.test_bulkload()
