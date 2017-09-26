@@ -1,85 +1,118 @@
-"""
-Temporal Proxy
-(c) Looking Glass Solutions 2007
-Licensed under GPL v2
-"""
-
-## SQL COMMANDS: http://www.postgresql.org/docs/8.3/interactive/sql-commands.html
-## USE PSYCO
-
-# Importing the required modules
-import os, sys, getopt, string
-from pyparsing import Literal, CaselessLiteral, Word,  delimitedList, Optional, \
-    Combine, Group, alphas, nums, alphanums, ParseException, Forward, oneOf, quotedString, \
-    ZeroOrMore, restOfLine, Keyword, commaSeparatedList, CharsNotIn, CaselessKeyword, QuotedString, alphas8bit, \
-    NotAny, ParserElement
-import time
-
-try:
-    import psyco
-    psyco.full()
-except:
-    pass
-
-# Variables #
-LIMIT,GROUP,ORDER,BY,DISTINCT,ALL,RESTRICT,CASCADE,USING,INDEX,TABLESPACE,CREATE,DROP,TABLE,SELECT,INSERT,UPDATE,DELETE,WHERE,AS,SET,FROM,ON,INTO,VALUES,ONLY = map(CaselessKeyword, "limit group order by distinct all restrict cascade using index tablespace create drop table select insert update delete where as set from on into values only".split())
-DEFAULT,NULL,TRUE,FALSE = map(CaselessKeyword, "default null true false".split())
-NOTNULL = CaselessKeyword("not null")
-E = CaselessLiteral("E")
-
-arithSign = Word("+-",exact=1)
-
-major_keywords = CREATE | DROP | SELECT | INSERT | UPDATE | DELETE | WHERE | AS | SET | FROM | ON | GROUP | ORDER
-realNum = Combine( Optional(arithSign) + ( Word( nums ) + "." + Optional( Word(nums) ) |
-            ( "." + Word(nums) ) ) + Optional( E + Optional(arithSign) + Word(nums) ) )
-intNum = Combine( Optional(arithSign) + Word( nums ) +
-            Optional( E + Optional("+") + Word(nums) ) )
-keywords = DEFAULT | NULL | TRUE | FALSE
-
-comment = "--" + restOfLine
-
-name = ~major_keywords + Word(alphanums + alphas8bit + "_")
-value = realNum | intNum | quotedString | name | keywords # need to add support for alg expressions
+import requests
 
 
-#INSERT Statement
-"""
-    INSERT INTO table [ ( column [, ...] ) ]
-    { DEFAULT VALUES | VALUES ( { expression | DEFAULT } [, ...] ) [, ...] | query }
-    [ RETURNING * | output_expression [ AS output_name ] [, ...] ]
-    """
+class Company(object):
+    def __init__(self):
+        super(Company, self).__init__()
+        self.base_url = 'http://192.168.10.167:6609/windelephant/api/company/'
+        self.headers = {
+            'authorization': '941c825b67e4377036ad6e4314f04dbba952c2c800150afa10b07924ba2a1b8d'
+        }
 
-ins_columns = Group(delimitedList( name ))
-ins_values = Group(delimitedList( value ))
-# define the grammar
-insert_stmt = INSERT + INTO + name.setResultsName( "table" ) \
-            + Optional( "(" + ins_columns.setResultsName( "columns" ) + ")") \
-            + VALUES + "(" + ins_values.setResultsName( "vals" ) + ")" + ';'
-insert_stmt.ignore( comment )
+    def create(self):
+        url = self.base_url + 'create'
+        data0 = {
+            'companyName': '修炼科技',
+            'socialCode': 'xiulianzone',
+            'abbreviation': '修炼',
+            # 'superiorCompany': '',
+            'licenseNo': 'xiulianlicense'
+        }
+        data1 = {
+            'companyName': '中国联通',
+            'socialCode': 'zhongguoliantong',
+            'abbreviation': '中国联通',
+            'superiorCompanyId': '59c86e31d9932e379c4e3b1f',
+            'licenseNo': '123zhongguoliantong'
+        }
+        data2 = {
+            'companyName': '江苏联通',
+            'socialCode': 'jiangsuliantong',
+            'abbreviation': '江苏联通',
+            'superiorCompanyId': '59c22724fd2970216001461d',
+            'licenseNo': '123江苏liantong'
+        }
+        data3 = {
+            'companyName': '珠海联通',
+            'socialCode': 'zhuhailiantong',
+            'abbreviation': '珠海联通',
+            'superiorCompanyId': '59c22731fd2970216001461f',
+            'licenseNo': '123珠海liantong'
+        }
+        r = requests.post(url,data1, headers=self.headers)
+        print(r.text)
 
-def insert(query):
-    global insert_stmt
+    def updated(self):
+        url = self.base_url + 'update'
+        data = {
 
-    try:
-        start = time.time()
-        ParserElement.enablePackrat()
-        tokens = insert_stmt.parseString( query )
-        end = time.time()
-        #query = translation.insert(tokens, information_schema, server)
-        print("\tPARSE\t", round((end - start), 2), "\t", round((time.time() - end), 2))
-    except ParseException:
-        return False
-    return tokens
+        }
 
-tokens = insert("INSERT INTO organisation (organisation_id, name, organisation_type, parent_organisation_id) VALUES ('123','Company','123 Corp','-1');")
-sql = """
-SELECT Trips.Request_at Day,
-       round(sum(if(status != 'completed', 1, 0)) / sum(1), 2) 'Cancellation Rate'
-FROM Trips
-JOIN Users
-  ON Trips.Client_Id = Users.Users_Id
-WHERE Users.Banned = 'No'
-  AND Trips.Request_at between '2013-10-01' AND '2013-10-03'
-GROUP BY Trips.Request_at
-"""
-print(tokens.dump())
+    def delete(self):
+        url = self.base_url + 'delete'
+        data = {
+            'id': '59bf936345fdbe2670af304b'
+        }
+        r = requests.post(url,data,headers=self.headers)
+        print(r.text)
+
+    def list(self):
+        url = self.base_url + 'list'
+        query = {
+            'abbreviation': '联通'
+        }
+        r = requests.get(url,params=query,headers=self.headers)
+        print(r.text)
+
+    def tree_list(self):
+        url = self.base_url + 'list/tree'
+        query = {
+            # 'company': '59c3818d58bb622fc010365d'
+        }
+        r = requests.get(url, params=query, headers=self.headers)
+        print(r.text)
+
+class Alarm(object):
+    def __init__(self):
+        super(Alarm, self).__init__()
+        self.base_url = 'http://192.168.10.167:6609/windelephant/api/alarmSetting/'
+        self.headers = {
+            'authorization': 'df8916b628f72ead956bdd3667ca4764defae924f8f861ddfe3c16331eae3d0b'
+        }
+
+    def create(self):
+        url = self.base_url + 'create'
+        data = {
+            'alarmName': 'test1', # 报警名称，string
+            'alarmType': '禁行报警',    # 报警类型,string
+            'beginTime': '2017-09-25 17:31', #开始时间
+            'endTime': '2017-09-25 17:35',  # 结束时间
+            'totalTime': '2',# 总时间
+            # 'speedingValue': '55',  # 超速阈值
+            'companyId': ['59c87412aec05b308c57cf5d'],  # 此报警策略的关联公司
+        }
+        r = requests.post(url,data,headers=self.headers)
+        print(r.text)
+
+    def remove(self):
+        url = self.base_url + 'delete'
+        data = {
+            'IDList': []
+        }
+
+    def list(self):
+        url = self.base_url + 'list'
+        params = {
+            # 'alarmType': '禁行报警',
+            'companyId': '59c87412aec05b308c57cf5d'
+        }
+        r = requests.get(url,params=params,headers=self.headers)
+        print(r.text)
+
+if __name__ == '__main__':
+    # d = Driver()
+    # d.main()
+    c = Company()
+    c.tree_list()
+    # a = Alarm()
+    # a.list()

@@ -1,13 +1,18 @@
 import cmd
 
+from sqlcommandprocessor.parse import SqlParser
+
 
 class Interface(cmd.Cmd):
     def __init__(self):
         super(Interface, self).__init__()
         self.prompt = '>>>'
 
-    # def
-
+    def parseline(self, line):
+        """
+        将语句传给sql解析器
+        """
+        print(SqlParser.execute(line))
 
 
 if __name__ == '__main__':
