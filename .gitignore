@@ -103,4 +103,4 @@ ENV/
 
 # irrelevant tests
 testjs.py
-tests.py
+../../tests/windelephanttest/tests.py
